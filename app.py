@@ -1,92 +1,65 @@
-import os
 import secrets
-
-import dotenv
 import streamlit as st
-
 import actions
-
-dotenv.load_dotenv('./.env')
-
 
 # Assign a Session ID
 if "session_id" not in st.session_state:
     st.session_state["session_id"] = secrets.token_hex(8)
-    
 
 # ----- SIDE BAR -----
 with st.sidebar:
     
-    st.title("Ollama Chat")
-    st.markdown(
-        """
-        [Ollama](https://github.com/ollama/ollama) is a runtime & API server that helps users to
-        run LLMs in the [GGUF](https://huggingface.co/docs/hub/gguf) format using
-        [llama.cpp](https://github.com/ggerganov/llama.cpp).
-        
-        The list of all supported models offered by Ollama can be found at the
-        [Model Library](https://ollama.com/library)
-        """
-    )
+    st.title("AI Chatbot 🤖")
+    st.markdown("Chat with OpenAI-powered assistant")
 
-    host = st.text_input(
-        label = 'Server URL',
-        key = 'HOST',
-        placeholder = 'http://localhost:11434',
-        value = os.getenv('OLLAMA_HOST')
-    )
-    
-    model = st.text_input(
-        label = 'Model',
-        key = 'MODEL',
-        placeholder = 'llama3',
-        value = os.getenv('OLLAMA_MODEL')
+    model = st.selectbox(
+        "Model",
+        options=["gpt-3.5-turbo", "gpt-4o-mini"],
+        key="MODEL"
     )
     
     temperature = st.slider(
-        label = 'Temperature',
-        key = 'TEMPERATURE',
-        min_value = 0.5,
-        max_value = 0.9,
-        step = 0.01,
-        value = 0.75
+        label='Temperature',
+        key='TEMPERATURE',
+        min_value=0.0,
+        max_value=1.0,
+        step=0.1,
+        value=0.7
     )
- 
-    connect, clear = st.columns(2)
-    
-    with connect:
-        _connect = st.button(
-            label = 'Connect',
-            key = 'connect',
-            on_click = actions.check_server,
-            use_container_width = True
-        )
-            
-    with clear:
-        _clear = st.button(
-            label = 'Clear',
-            key = 'clear',
-            on_click = actions.clear_chat_history,
-            use_container_width = True
-        )
 
-# ----- MAIN PAGE -----            
+    # ❌ Removed Connect button (not needed)
 
-st.title('Chatbot')
-st.markdown(f"You can start your Conversation with: `{st.session_state.get('MODEL')}`")
-    
+    st.button(
+        label='Clear Chat',
+        key='clear',
+        on_click=actions.clear_chat_history,
+        use_container_width=True
+    )
+
+# ----- MAIN PAGE -----
+
+st.title('💬 Chatbot')
+st.markdown(f"Model: `{st.session_state.get('MODEL')}`")
+
+# Show chat history
 if st.session_state.get('langchain_messages'):
     for idx, message in enumerate(st.session_state.get('langchain_messages'), start=1):
-        _user = 'human' if idx % 2 else 'assistant'
-        with st.chat_message(_user):
+        role = 'human' if idx % 2 else 'assistant'
+        with st.chat_message(role):
             st.write(message.content)
 
-user_input = st.chat_input(key = 'user_input', on_submit = actions.get_response)
+# Input box
+user_input = st.chat_input("Type your message...")
 
 if user_input:
+    st.session_state['user_input'] = user_input
+    
     with st.chat_message('human'):
         st.write(user_input)
-        
+    
+    actions.get_response()
+
+# Show response
 response = st.session_state.get('response')
 if response:
     with st.chat_message('assistant'):
