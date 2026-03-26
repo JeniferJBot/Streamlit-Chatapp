@@ -1,4 +1,6 @@
-streamlit==1.37.0
-langchain==0.2.11
-langchain-community==0.2.10
+streamlit
+langchain
+langchain-community
 python-dotenv
+openai
+tiktoken
